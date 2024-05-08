@@ -1,0 +1,7 @@
+
+1. bascially the shape basis would be something like -
+- a general feats of all chairs ( ie a back, a seat, and 4 legs)
+- the handle part
+- others
+
+visualize these shape basis
