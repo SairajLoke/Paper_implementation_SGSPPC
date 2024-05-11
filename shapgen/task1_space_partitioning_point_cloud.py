@@ -1,24 +1,43 @@
-from kdtree import Node, KDTree
+from task1_kdtree import Node, KDTree
 import open3d as o3d
 import numpy as np  
+import time
 
-WIDTH = 1000  #N in paper
-NUMs_SHAPE = 5000  #S in paper
+from configs import WIDTH,NUMs_SHAPE,NUM_PT_FEATURES
 
+'''
 
+time taken for 5k clouds:
+final_sorted_pcld shape: (post transpose):  (3000, 5000)
+Time taken:  281.01263427734375 ( with print cmds) 
+
+'''
+begining = True
 
 def process_point_cloud(pcld_dir,pcld_count):
+    
     
     final_sorted_pcld = np.zeros( shape=(1, 3*WIDTH) )
     
     for pcld_index in range(1,pcld_count+1):
+        
+
         pcld_path = pcld_dir + str(pcld_index) + '.pcd'
         pcld = o3d.io.read_point_cloud(pcld_path)
         pcldnp = np.asarray(pcld.points)
+
+        
     
         kdt = KDTree()
-        mytree = kdt.build_kdtree(pcld.points)
+        mytree = kdt.build_N_getkdtree(pcld.points) #0 passed in build_kdtree as depth inside this
         print(type(mytree['point'][0]))
+
+        #----debugging
+        # global begining
+        # if begining:
+        print('root after sorting (using tree dict) :' , kdt.getroot()['point']) # the first dividing point
+        # begining = False
+        #--------
 
         kdt.inorder_traversal(mytree)
         print(kdt.sorted_pcld.shape)
@@ -26,24 +45,32 @@ def process_point_cloud(pcld_dir,pcld_count):
         
         kdt.sorted_pcld = np.delete(kdt.sorted_pcld, [0], 0)
         kdt.sorted_pcld = np.expand_dims(kdt.sorted_pcld,0)
-        print(kdt.sorted_pcld.shape)
+        print('kdt.sorted_pcld.shape :' , kdt.sorted_pcld.shape)
 
+        #as this sorted_pcld is a row vector, it is transposed to a column vector afterwards
+        #debug ---------------------------------------------------
+        mididx = len(kdt.sorted_pcld[0])//2
+        print(mididx)
+        print('root from the column vector for S', 
+                kdt.sorted_pcld[0][ mididx :mididx+2+1] ) #should be exact same to the one from root
+        #----------------------------------------------------------
 
         final_sorted_pcld = np.append(final_sorted_pcld, kdt.sorted_pcld, axis=0) #append as new row
         print(f'{final_sorted_pcld.shape}')
 
     final_sorted_pcld = np.delete(final_sorted_pcld, [0], 0)
     print(final_sorted_pcld.shape)
-    final_sorted_pcld = final_sorted_pcld.transpose()
+    final_sorted_pcld = final_sorted_pcld.transpose() 
     print('final_sorted_pcld shape: (post transpose): ', final_sorted_pcld.shape)
 
-    with open('sorted_ptcloud_3NxS.npy', 'wb') as f:
+    with open('3NxS_expt.npy', 'wb') as f: #sorted_ptcloud_3NxS.npy
         np.save(f, np.array(final_sorted_pcld))
 
 
-
-process_point_cloud('C:/Users/Sairaj Loke/Desktop/Preimage/shapenet-chairs-pcd/', 1)
-
+start = time.time()
+process_point_cloud(POINT_CLOUD_DATA, 5)# NUMs_SHAPE)
+end = time.time()
+print('Time taken: ', end-start)
 
 
 def testsNviz():

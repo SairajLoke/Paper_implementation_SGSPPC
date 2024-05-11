@@ -1,0 +1,12 @@
+Include/*
+Lib/*
+share/*
+Scripts/*
+Library/*
+etc/*
+__pycache__/*
+pyvenv.cfg
+
+point_cloud_matrices/*
+lookout.py
+shapgen/sorted_ptcloud_3NxS.npy

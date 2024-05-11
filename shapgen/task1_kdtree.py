@@ -1,10 +1,11 @@
 import numpy as np
 
+from configs import NUM_PT_FEATURES
 '''
 Code written by Sairaj Loke
 
 '''
-NUM_PT_FEATURES = 3
+
 
 
 
@@ -20,7 +21,6 @@ class Node:
 class KDTree :
     def __init__(self):
         self.root = None
-        self.dims = [0,1,2]
         self.sorted_pcld = np.zeros( shape=(1, 1) )
 
     def build_kdtree(self, points, depth=0):
@@ -28,8 +28,9 @@ class KDTree :
         if n <= 0:
             return None  #empty point cloud
 
-        axis = depth % 3
+        axis = depth % NUM_PT_FEATURES
         sorted_points = sorted(points, key=lambda x: x[axis])
+        # print('temp sorted points:', sorted_points.shape) its a list
         # https://www.geeksforgeeks.org/python-difference-between-sorted-and-sort/
         
         return {
@@ -38,7 +39,16 @@ class KDTree :
             'right': self.build_kdtree(sorted_points[n // 2 + 1:], depth + 1)
         }
 
-        
+    def getroot(self):
+        if self.root is None:
+            print('root is None')
+            
+        return self.root
+
+    def build_N_getkdtree(self,points):
+        self.root = self.build_kdtree(points,0)
+        return self.root
+
     def inorder_traversal(self,node, depth=0):
         #to add new nodes as cols (ie. the sorted pcld is 1xN form always)
         if node is not None :
