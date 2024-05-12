@@ -43,11 +43,16 @@ def shape_tests():
     print(d)
     print(d.shape)
 
+def matslicing():
+    a = np.array([[1,2,3,4,5],[6,7,8,9,10],[11,12,13,14,15]])
+    print(a[:,3])
+
 def mean_test():
     a = np.array([[1,2],[3,4],[5,6]])
     b = np.mean(a, axis=1)
     print(b)
 if __name__ == '__main__':
     # normtests()
-    mean_test()
+    # mean_test()
     # shape_tests()
+    matslicing()

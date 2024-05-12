@@ -15,6 +15,8 @@ steps
 2. swap
 3. if red error keep swapped, else revert swapping
 4. 
+
+
 '''
 from numpy.random import default_rng
 import numpy as np
@@ -62,18 +64,30 @@ def pca_reconstruction_error(U,m_3NxS):
     # val = newproduct - 
     mu = np.mean(m_3NxS, axis=1) #calculating at every swap as the order of points is changing or instead i can swap mu as well 
     print('mu.shape', mu.shape)
+    print('m_3NxS.shape', m_3NxS.shape)
     mu = np.expand_dims(mu, axis=1)
     # diff1 = Ps - mu 
     #error here need to fix
     sum_error = 0
 
+    
+    # where h is an n x I column vector of all Is:
+# for i = I
+    # B = X - huT
+
+
     for s in range(NUMs_SHAPE):
+        print(s,m_3NxS.shape)
         Ps = m_3NxS[:,s]  # 3Nx1
         Ps = np.expand_dims(Ps, axis=1)
         print('Ps.shape', Ps.shape)
         diff1 = Ps - mu # 3Nx1
         val = np.dot(U,U.T)@(diff1) - diff1
-        print('val', val.shape)
+        print(val)
+        # if val.any() >= 0e+00 :  #this should be zero , check
+        #     print('val not zero')
+        # else:
+        #     print('val is zero')
         error_mag_for_one_shape = np.dot(val.T,val)  
         sum_error += error_mag_for_one_shape
 
@@ -113,7 +127,7 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
             i,j = (rng.choice(np.arange(0,WIDTH), 2, replace=False))*3
             #0,3,6 ... 2997
             print('random i,j', i,j) 
-            print(m_3NxS.shape)
+            print('m_3NxS',m_3NxS.shape)
 
             #debgu
             if i == j or i%3 != 0 or j%3 != 0 or i<0 or j<0 or i>= NUM_PT_FEATURES*WIDTH  or j>= NUM_PT_FEATURES*WIDTH :
@@ -123,20 +137,21 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
 
             Psi = m_3NxS[i:i+3][:]  #1 random pt across all shapes (to maintain global consistent order)
             Psj = m_3NxS[j:j+3][:] #
-
+            print('m_3NxS[i:i+3] and j', m_3NxS[i:i+3][:].shape, m_3NxS[j:j+3][:].shape)
+            # print('Psi,', Psi, '------------------------' ,'Psj:', Psj ,'------------------------\n')
+            print('Psi,Psj:', Psi.shape, Psj.shape )
             m_3NxS[i:i+3][:] = Psj  #TODO check if this works as i want
             m_3NxS[j:j+3][:] = Psi
 
             print(f'\n----------------------swapped points: {m_3NxS[i:i+3][:].shape}, {m_3NxS[j:j+3][:].shape}')
-            print(m_3NxS[i:i+3][:], m_3NxS[j:j+3][:])
-            print('Psi,Psj:', Psi, '------------------------' , Psj ,'------------------------\n')
+            
 
             #m_3NxS has now swapped points i and j
 
-            U,S,V = pca_using_svd(m_3NxS)
-
+            U,S,Vt = pca_using_svd(m_3NxS)
+            print('U.Ut',np.dot(U,U.T).shape, np.dot(U,U.T ))
             
-            avg_pca_error_across_shapes = pca_reconstruction_error(m_3NxS,U)
+            avg_pca_error_across_shapes = pca_reconstruction_error(U,m_3NxS)
             print('pca_error:',  avg_pca_error_across_shapes.shape, avg_pca_error_across_shapes)
 
             k_pca_errors += avg_pca_error_across_shapes
@@ -176,14 +191,15 @@ def get_optimized_pt_orderingNdraw(m_3NxS,swaps_K, iters_I):
 
 
 if __name__ == '__main__':
-    
+    # m_3NxS_sorted = np.zeros( shape=(10,20) )
+
     optimized_sorted_m_3NxS = None
 
     with open(SORTED_POINTCLOUD_NPY_FILEPATH, 'rb') as f:
         m_3NxS_sorted = np.load(f)
         print('m_3NxS_sorted',m_3NxS_sorted.shape)#, m_3NxS_sorted, '\n-------------------')
         print(type(m_3NxS_sorted))
-        m_3NxS_sorted = m_3NxS_sorted[:,0:NUMs_SHAPE] #for testing
+        m_3NxS_sorted = m_3NxS_sorted[:3*WIDTH, 0:NUMs_SHAPE] #for testing
         print('m_3NxS_sorted',m_3NxS_sorted.shape)
         optimized_sorted_m_3NxS = get_optimized_pt_orderingNdraw(m_3NxS_sorted,SWAP_K, ITERS_I)
 

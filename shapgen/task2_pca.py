@@ -7,13 +7,13 @@ from numpy import linalg as la
 
 from configs import BASIS_SIZE
 
-pca = PCA(n_components = BASIS_SIZE) #components
+# pca = PCA(n_components = BASIS_SIZE) #components
 
 
 
 
 
-def pca():
+def pca_old():
     with open(filepath, 'rb') as f:
         b = np.load(f)
         print(b, b.shape)
@@ -33,18 +33,12 @@ def pca_using_svd(m_3NxS):
     #  check what exactly)
     #-------------------------------------------
 
-    U, S, Vt = la.svd(m_3NxS, full_matrices=False)
+    U, S, Vt = la.svd(m_3NxS, full_matrices=True)
     #expected shapes?  seems U V are switched? not sure
 
-    V = Vt.T 
-    print('U:', U.shape, 'S:', S.shape, 'V:', V.shape)
-    return U,S,V
+    # V = Vt.T 
+    print('U:', U.shape, 'S:', S.shape, 'Vt:', Vt.shape)
+    # return U[:,0:BASIS_SIZE],S[0:BASIS_SIZE,0:BASIS_SIZE],V[0:BASIS_SIZE, 0:BASIS_SIZE]
+    return U,S,Vt
 
 
-def pca_matrices():
-    pass
-
-
-if __name__ == '__main__':
-    print(reconstruction_error_pca())
-    print('done')
