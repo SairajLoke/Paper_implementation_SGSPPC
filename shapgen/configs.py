@@ -6,7 +6,7 @@ SWAP_K = 4 #10000
 ITERS_I = 3 #1000
 
 WIDTH =   20 #20 #1000  #N in paper
-NUMs_SHAPE = 100 #200  # 5000  #S in paper
+NUMs_SHAPE = 80 #200  # 5000  #S in paper
 
 #for width = 20 (60)  < numsshape 200 - (horizontal matrix)    U: (60, 60) S: (60,) Vt: (60, 200) #why is u 60x60 and not 60x200
 #for width = 100(300) > numsshape 20 - (vertical matrix)       U: (300, 20) S: (20,) Vt: (20, 20)

@@ -195,10 +195,15 @@ if __name__ == '__main__':
 
     optimized_sorted_m_3NxS = None
 
+
     with open(SORTED_POINTCLOUD_NPY_FILEPATH, 'rb') as f:
         m_3NxS_sorted = np.load(f)
         print('m_3NxS_sorted',m_3NxS_sorted.shape)#, m_3NxS_sorted, '\n-------------------')
         print(type(m_3NxS_sorted))
+
+        #viz some pt clouds and color the pts according to the order
+        #TODO
+
         m_3NxS_sorted = m_3NxS_sorted[:3*WIDTH, 0:NUMs_SHAPE] #for testing
         print('m_3NxS_sorted',m_3NxS_sorted.shape)
         optimized_sorted_m_3NxS = get_optimized_pt_orderingNdraw(m_3NxS_sorted,SWAP_K, ITERS_I)

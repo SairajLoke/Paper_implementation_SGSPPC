@@ -8,32 +8,48 @@ from task4_GAN_model import Generator, Discriminator
 from task4_Dataset import ShapeDataset
 
 from configs import TRAINING_DATA_PATH, NUM_EPOCHS, LRD,LRG, REAL_LABEL, FAKE_LABEL,DISC_K_ITERS,  BATCH_SIZE, BETA1
-from utils import draw_point_cloud
+from utils import draw_point_cloud, plot_losses
 
 from configs import NUM_PT_FEATURES, WIDTH,BASIS_SIZE
 
 from tqdm import tqdm
 
+
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-
 
 
 def get_generator_loss(activations_fake, activations_real):
     #check if they are on same device 
-
+    
+    print('generator loss ', 'device', device)
     exp_activations_fake = activations_fake.mean(dim=0) #check dim
     exp_activations_real = activations_real.mean(dim=0)
-    mod1 = torch.norm(exp_activations_fake - exp_activations_real, p=2)
+    mod1 = torch.norm(exp_activations_fake - exp_activations_real, p=2).to(device)
 
-    torch_covs = torch.zeros(BATCH_SIZE,BASIS_SIZE,BASIS_SIZE).to(device)
+    torch_covs_fake = torch.zeros(BATCH_SIZE,BASIS_SIZE,BASIS_SIZE).to(device)
+    torch_covs_real = torch.zeros(BATCH_SIZE,BASIS_SIZE,BASIS_SIZE).to(device)
+
     #TODO check if cov dim is correct (seems like, cov is among dims and not across exmaples)
+    print(activations_fake.shape, activations_real.shape)
+    for i in range(BATCH_SIZE):
+        val = torch.cov(activations_fake[i])
+        print('f cov shape', val.shape)
+        torch_covs_fake[i] = val
 
-    
-    cov_fake, cov_real = torch.cov(activations_fake), torch.cov(activations_real) #rowvar not here 
-    mod2 = torch.norm(cov_fake - cov_real, p=2)
+    for i in range(BATCH_SIZE):
+        val = torch.cov(activations_real[i])
+        print('r cov shape', val.shape)
+        torch_covs_real[i] = val
+
+    mod2 = torch.tensor(0,dtype=torch.float64 ).to(device)
+    for i in range(BATCH_SIZE):
+        mod2 += torch.norm(torch_covs_fake[i] - torch_covs_real[i], p=2)
+    # cov_fake, cov_real = torch.cov(activations_fake), torch.cov(activations_real) #rowvar not here 
+    # mod1 = torch.mean(torch, dim=0)
     print('mod1.shape: ',mod1.shape, 'mod2.shape', mod2.shape)
-    assert mod1.get_device() == device
+    assert mod2.get_device() == activations_fake.get_device(), print('mod2 device:',mod2.get_device(), 'device:',device)
+    assert mod1.get_device() == activations_fake.get_device(), print('mod1 device:',mod1.get_device(), 'device:',device)
     return mod1 + mod2
 
 
@@ -80,7 +96,8 @@ if __name__ == '__main__':
     Gene_losses = []
     Disc_losses = []
     for epoch in range(NUM_EPOCHS):
-
+        epoch_lossD = torch.tensor(0.0,dtype=torch.float32).to(device)
+        epoch_lossG = torch.tensor(0.0,dtype=torch.float32).to(device)
         for i, data in enumerate(pcdloader,0):
 
             if data is None:
@@ -156,7 +173,10 @@ if __name__ == '__main__':
             print('fake disc output', outputDG.shape, outputDG)
 
             #TODO test lossG
-            lossG = get_generator_loss(activns_fake, activns_real)
+            output_reall, activns_reall = netD(data) # doing again as the graph is done ? after previous backward pass 
+            #check how to retain graph for the netD
+            
+            lossG = get_generator_loss(activns_fake,  activns_reall)
             lossG.backward()
             optimizerG.step()
 
@@ -170,9 +190,10 @@ if __name__ == '__main__':
         Gene_losses.append(epoch_lossG)
         Disc_losses.append(epoch_lossD)
         
-        plot_losses(Gene_losses, Disc_losses)
+        
         print('$$$--------------------epoch idx:',epoch,  'lossD:',lossD, 'lossG:',lossG, '--------------------$$$') #
 
+    plot_losses(Gene_losses, Disc_losses)
 
     
 

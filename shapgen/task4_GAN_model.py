@@ -83,16 +83,16 @@ class Discriminator(nn.Module):
     def __init__(self, pcd_size):
         super(Discriminator, self).__init__()
         self.pcd_size = pcd_size
-        self.fc1 = nn.Linear(self.pcd_size, 100)
-        self.fc2 = nn.Linear(100, 100)
-        self.fc3 = nn.Linear(100, 100)
-        self.fc4 = nn.Linear(100, 100)
-        self.fc5 = nn.Linear(100, 1)
+        self.fc1 = nn.Linear(self.pcd_size, self.pcd_size)
+        self.fc2 = nn.Linear(self.pcd_size, self.pcd_size)
+        self.fc3 = nn.Linear(self.pcd_size, self.pcd_size)
+        self.fc4 = nn.Linear(self.pcd_size, self.pcd_size)
+        self.fc5 = nn.Linear(self.pcd_size, 1)
 
-        self.bn1 = nn.BatchNorm1d(100)
-        self.bn2 = nn.BatchNorm1d(100)
-        self.bn3 = nn.BatchNorm1d(100)
-        self.bn4 = nn.BatchNorm1d(100)
+        self.bn1 = nn.BatchNorm1d(self.pcd_size)
+        self.bn2 = nn.BatchNorm1d(self.pcd_size)
+        self.bn3 = nn.BatchNorm1d(self.pcd_size)
+        self.bn4 = nn.BatchNorm1d(self.pcd_size)
 
         self.leakyrelu = nn.LeakyReLU(0.1)
         self.sigmod = nn.Sigmoid()

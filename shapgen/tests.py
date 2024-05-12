@@ -125,6 +125,13 @@ def cat():
     g = np.cov(e)
     print(f,g)
 
+def norms():
+
+    a = torch.tensor([[1,2,3,4,5], [1,2,3,4,5]], dtype=torch.float32)
+    b = torch.tensor([[0,0,0,0,0], [1,1,1,1,1]] , dtype=torch.float32)
+
+    c = torch.norm(a-b, p=2)
+    print(c)
 
 if __name__ == '__main__':
     # normtests()
@@ -133,4 +140,5 @@ if __name__ == '__main__':
     # matslicing()
     # cov_test()
     # cat()
-    batched_cov_test()
+    # batched_cov_test()
+    norms()

@@ -6,6 +6,7 @@ from sklearn.decomposition import PCA
 from numpy import linalg as la
 
 from configs import BASIS_SIZE
+# U should be calculated on the entire dataset right?
 
 # pca = PCA(n_components = BASIS_SIZE) #components
 
