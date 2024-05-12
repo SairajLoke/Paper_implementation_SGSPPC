@@ -75,6 +75,7 @@ class Generator(nn.Module):
         out = self.bn4(out)
         out = self.relu(out)
 
+        print('Generator output', out.shape, out)
         return out
 
 class Discriminator(nn.Module):
@@ -102,21 +103,33 @@ class Discriminator(nn.Module):
         out = self.fc1(x)
         out = self.bn1(out)
         out = self.leakyrelu(out)
+        activation1 = out
 
         out = self.fc2(out)
         out = self.bn2(out)
         out = self.leakyrelu(out)
+        activation2 = out
 
         out = self.fc3(out)
         out = self.bn3(out)
         out = self.leakyrelu(out)
+        activation3 = out
 
         out = self.fc4(out)
         out = self.bn4(out)
         out = self.leakyrelu(out)
-
+        activation4 = out
+        print(activation4.shape)
         #shouldnt the output be 1?
         out = self.fc5(out)
         out = self.sigmod(out)
 
-        return out
+        activation1 = torch.unsqueeze(activation1,2)
+        activation2 = torch.unsqueeze(activation2,2)
+        activation3 = torch.unsqueeze(activation3,2)
+        activation4 = torch.unsqueeze(activation4,2)
+        activations = torch.cat((activation1,activation2,activation3,activation4),dim=-1)
+
+        print('(batchsize x BASIS_SIZE x 4) Activations', activations.shape)
+
+        return out,activations

@@ -21,9 +21,10 @@ TRAINING_DATA_PATH = 'C:/Users/Sairaj Loke/Desktop/Preimage/Preimage_Intern_Task
 #training params
 
 NUM_EPOCHS = 500
-LR = 0.0002
+LRD = 0.0001
+LRG = 0.0025
 REAL_LABEL = 1
 FAKE_LABEL = 0
-BATCH_SIZE = 4
+BATCH_SIZE = 3 #(say1)
 BETA1 = 0.5
-DISC_K_ITERS = 2
+DISC_K_ITERS = 1 # >1 not supported currently in code makesure to keep it 1
