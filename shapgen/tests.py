@@ -133,6 +133,14 @@ def norms():
     c = torch.norm(a-b, p=2)
     print(c)
 
+def pca_recon():
+
+    a = np.array([[1,2,3,4,5], [0,0,0,0,0]], dtype=np.float32).T
+    print(a.shape)
+    print(np.mean(a, axis=1))
+    b = torch.tensor([[0,0,0,0,0], [1,1,1,1,1]] , dtype=np.float32)
+
+
 if __name__ == '__main__':
     # normtests()
     # mean_test()
@@ -141,4 +149,5 @@ if __name__ == '__main__':
     # cov_test()
     # cat()
     # batched_cov_test()
-    norms()
+    # norms()
+    pca_recon()

@@ -20,17 +20,18 @@ steps
 '''
 from numpy.random import default_rng
 import numpy as np
+import time
 
 from task2_pca import pca_using_svd
 
 from utils import plot_error_vs_iters, draw_point_cloud
 from configs import NUMs_SHAPE, SWAP_K, ITERS_I
-from configs import NUM_PT_FEATURES, WIDTH
+from configs import NUM_PT_FEATURES, WIDTH, BASIS_SIZE
 from configs import  SORTED_POINTCLOUD_NPY_FILEPATH, OPTIMIZED_SORTED_m_3NxS_NPY_FILEPATH
 rng = default_rng()
 
 
-def pca_reconstruction_error(U,m_3NxS):
+def pca_reconstruction_error(U,S,Vt, m_3NxS):
     print('calculating_pca_error')
     '''
     avg across all shapes ?
@@ -62,27 +63,34 @@ def pca_reconstruction_error(U,m_3NxS):
     #  # 0 4 1   1 0.25 = 6.25
     #
     # val = newproduct - 
+    print('m_3NxS.shape', m_3NxS.shape)
     mu = np.mean(m_3NxS, axis=1) #calculating at every swap as the order of points is changing or instead i can swap mu as well 
     print('mu.shape', mu.shape)
-    print('m_3NxS.shape', m_3NxS.shape)
     mu = np.expand_dims(mu, axis=1)
-    # diff1 = Ps - mu 
-    #error here need to fix
     sum_error = 0
 
     
     # where h is an n x I column vector of all Is:
 # for i = I
     # B = X - huT
-
-
+    
+    
     for s in range(NUMs_SHAPE):
-        print(s,m_3NxS.shape)
+    #no need to avg over shapes?
+
+        print(m_3NxS.shape) #s
         Ps = m_3NxS[:,s]  # 3Nx1
         Ps = np.expand_dims(Ps, axis=1)
         print('Ps.shape', Ps.shape)
         diff1 = Ps - mu # 3Nx1
-        val = np.dot(U,U.T)@(diff1) - diff1
+        # val = np.dot(U,U.T)@(diff1) - diff1
+        recon = U@S@Vt
+        print('recon', recon.shape)
+
+        #----------------------
+        val = recon +mu  - Ps  #followed the recon mentioned in toronto notes
+        #----------------------
+        
         print(val)
         # if val.any() >= 0e+00 :  #this should be zero , check
         #     print('val not zero')
@@ -93,8 +101,8 @@ def pca_reconstruction_error(U,m_3NxS):
 
 
     # 1xS                         
-    avg_error = sum_error/NUMs_SHAPE
-    print('avg_error : ', avg_error.shape)
+    avg_error = sum_error #/NUMs_SHAPE
+    print('sum_error : ', avg_error.shape)
     # print('error_mag_for_each_shape:', error_mag_for_each_shape.shape)
     return avg_error[0,0] # 1x1
 
@@ -149,9 +157,18 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
             #m_3NxS has now swapped points i and j
 
             U,S,Vt = pca_using_svd(m_3NxS)
+            # print('U.Ut',np.dot(U,U.T).shape, np.dot(U,U.T ))
+            # print('\n-----------------------------------------\n')
+
+            U = U[:,0:BASIS_SIZE] #U is 3Nx3N, U[:,0:BASIS_SIZE] is 3Nx100
+            S = np.diag(S)
+            S = S[0:BASIS_SIZE, 0:BASIS_SIZE] #S is 100, S[0:BASIS_SIZE] is 100
+            Vt = Vt[0:BASIS_SIZE, 0:NUMs_SHAPE] #Vt is 3NxS, Vt[0:BASIS_SIZE] is 100xS
+            print('U:', U.shape, 'S:', S.shape, 'Vt:', Vt.shape)  #U: (m, 100) S: (100,) Vt: (100, 80)
             print('U.Ut',np.dot(U,U.T).shape, np.dot(U,U.T ))
             
-            avg_pca_error_across_shapes = pca_reconstruction_error(U,m_3NxS)
+            # break
+            avg_pca_error_across_shapes = pca_reconstruction_error(U,S,Vt, m_3NxS)
             print('pca_error:',  avg_pca_error_across_shapes.shape, avg_pca_error_across_shapes)
 
             k_pca_errors += avg_pca_error_across_shapes
@@ -184,7 +201,7 @@ def get_optimized_pt_orderingNdraw(m_3NxS,swaps_K, iters_I):
     print('Post Optimization point cloud matrix shape: ', m_3NxS.shape)
     print('len of error list: ', len(pca_error_periters_list))
     plot_error_vs_iters(pca_error_periters_list)
-    draw_point_cloud(m_3NxS)
+    draw_point_cloud(m_3NxS[:,0])
 
     return m_3NxS
 
@@ -201,14 +218,20 @@ if __name__ == '__main__':
         print('m_3NxS_sorted',m_3NxS_sorted.shape)#, m_3NxS_sorted, '\n-------------------')
         print(type(m_3NxS_sorted))
 
-        #viz some pt clouds and color the pts according to the order
-        #TODO
+        #viz some pt clouds and color the pts, to confirm the pts loaded correctly
+        # draw_point_cloud(m_3NxS_sorted[:,0]) #works
+
+
+        
 
         m_3NxS_sorted = m_3NxS_sorted[:3*WIDTH, 0:NUMs_SHAPE] #for testing
         print('m_3NxS_sorted',m_3NxS_sorted.shape)
-        optimized_sorted_m_3NxS = get_optimized_pt_orderingNdraw(m_3NxS_sorted,SWAP_K, ITERS_I)
 
-        #save the optimized matrix
+        start = time.time()
+        optimized_sorted_m_3NxS = get_optimized_pt_orderingNdraw(m_3NxS_sorted,SWAP_K, ITERS_I) #around > 2mins expected
+        end = time.time()
+        print(f'time taken for sorting ptclds using kdtree: a {3*WIDTH} x {NUMs_SHAPE} matrix: {end-start}')
+
 
     print('Optimized sorted point cloud matrix shape: ', optimized_sorted_m_3NxS.shape)
     with open(OPTIMIZED_SORTED_m_3NxS_NPY_FILEPATH, 'wb') as f:

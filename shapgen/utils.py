@@ -6,7 +6,21 @@ Plotting and drawing functions
 import matplotlib.pyplot as plt
 import open3d as o3d
 
-def draw_point_cloud(pcd):
+def draw_point_cloud(ptcloud_matrix_3Nx1_old):
+    print('point cloud old matrix shape:', ptcloud_matrix_3Nx1_old.shape)
+    ptcloud_matrix_3Nx1 = ptcloud_matrix_3Nx1_old.reshape(-1,3) # check if it keeps xyz adjacent
+    print('point cloud matrix shape:', ptcloud_matrix_3Nx1.shape)
+
+    assert ptcloud_matrix_3Nx1_old[0] == ptcloud_matrix_3Nx1[0,0] , print(ptcloud_matrix_3Nx1[0,0] , ptcloud_matrix_3Nx1[0,0])
+    assert ptcloud_matrix_3Nx1_old[1] == ptcloud_matrix_3Nx1[0,1]
+    assert ptcloud_matrix_3Nx1_old[2] == ptcloud_matrix_3Nx1[0,2]
+    assert ptcloud_matrix_3Nx1_old[3] == ptcloud_matrix_3Nx1[1,0]
+    assert ptcloud_matrix_3Nx1_old[4] == ptcloud_matrix_3Nx1[1,1]
+    
+
+
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(ptcloud_matrix_3Nx1[:]) #reshape(-1,3) col matrix
     o3d.visualization.draw_geometries([pcd])
     #draw the point cloud
     return 
@@ -19,7 +33,8 @@ def plot_error_vs_iters(pca_error_periters_list):
     plt.ylabel('Error')
     plt.title('Error vs Iterations')
     
-    plt.savefig('plots/error_vs_iters.png')
+    savepath = f'plots/pca_error_vs_iters_{BASIS_SIZE}_{WIDTH}_{NUMs_SHAPE}.png'
+    plt.savefig(savepath)
     plt.show()
 
     return 
@@ -38,6 +53,7 @@ def plot_losses(Gene_losses, Disc_losses):
     plt.show()
 
     return
+
 def save_column_matrix_as_pcd(save_path, column_matrix, idx):
     #save the column matrix as a point cloud data file
     column_matrix = column_matrix.reshape(3,-1) # check if it keeps xyz adjacent
