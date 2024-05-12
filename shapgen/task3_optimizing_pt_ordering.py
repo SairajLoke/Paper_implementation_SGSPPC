@@ -27,9 +27,10 @@ from task2_pca import pca_using_svd
 from utils import plot_error_vs_iters, draw_point_cloud
 from configs import NUMs_SHAPE, SWAP_K, ITERS_I
 from configs import NUM_PT_FEATURES, WIDTH, BASIS_SIZE
-from configs import  SORTED_POINTCLOUD_NPY_FILEPATH, OPTIMIZED_SORTED_m_3NxS_NPY_FILEPATH
+from configs import  SORTED_POINTCLOUD_NPY_FILEPATH, OPTIMIZED_SORTED_m_3NxS_NPY_FILEPATH, OPTIMIZED_SORTED_U_FILEPATH
 rng = default_rng()
 
+from tqdm import tqdm   
 
 def pca_reconstruction_error(U,S,Vt, m_3NxS):
     print('calculating_pca_error')
@@ -75,7 +76,7 @@ def pca_reconstruction_error(U,S,Vt, m_3NxS):
     # B = X - huT
     
     
-    for s in range(NUMs_SHAPE):
+    for s in tqdm(range(NUMs_SHAPE)):
     #no need to avg over shapes?
 
         print(m_3NxS.shape) #s
@@ -90,8 +91,8 @@ def pca_reconstruction_error(U,S,Vt, m_3NxS):
         #----------------------
         val = recon +mu  - Ps  #followed the recon mentioned in toronto notes
         #----------------------
-        
-        print(val)
+        # print(val)
+
         # if val.any() >= 0e+00 :  #this should be zero , check
         #     print('val not zero')
         # else:
@@ -121,7 +122,9 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
     min_avg_pca_error_across_shapes = 1000000 #random large value
     #TODO the avg_pca_error_across_shapes seems high- 128133 (theirs was around 12k)
 
-    for iter_idx in range(iters_I):
+    optimized_U = None
+
+    for iter_idx in tqdm(range(iters_I)):
         pca_error_allswaps_list = []  
         k_pca_errors = 0
         # for shape_idx in range(NUMs_SHAPE):
@@ -129,7 +132,7 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
         # so the order of points is consistent in our matrix, 
         # which is our main goal(to have a consistent global ordering of the point cloud)
 
-        for swap_idx in range(swaps_K):
+        for swap_idx in tqdm(range(swaps_K)):
             
 
             i,j = (rng.choice(np.arange(0,WIDTH), 2, replace=False))*3
@@ -177,6 +180,7 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
             if avg_pca_error_across_shapes < min_avg_pca_error_across_shapes :
                 min_pca_error = avg_pca_error_across_shapes
                 print(f"{iter_idx}, {swap_idx} pca error reduced")
+                optimized_U = U
                 #keep changed matrix    
             else:
                 #revert back to original
@@ -190,11 +194,11 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
         
 
     #optimized 
-    return m_3NxS, pca_error_alliters_list
+    return m_3NxS, pca_error_alliters_list, optimized_U
 
 
 def get_optimized_pt_orderingNdraw(m_3NxS,swaps_K, iters_I):
-    m_3NxS, pca_error_periters_list = optimizing_pt_ordering(m_3NxS,swaps_K, iters_I)
+    m_3NxS, pca_error_periters_list, optimized_U = optimizing_pt_ordering(m_3NxS,swaps_K, iters_I)
 
     #draw the optimized point cloud
     # draw(m_3NxS)
@@ -202,16 +206,19 @@ def get_optimized_pt_orderingNdraw(m_3NxS,swaps_K, iters_I):
     print('len of error list: ', len(pca_error_periters_list))
     plot_error_vs_iters(pca_error_periters_list)
     draw_point_cloud(m_3NxS[:,0])
+    np.save('point_cloud_matrices/optimized_U.npy', optimized_U)
+
+    with open(OPTIMIZED_SORTED_U_FILEPATH, 'wb') as f:
+       np.save(OPTIMIZED_SORTED_U_FILEPATH, optimized_U)
 
     return m_3NxS
 
 
 
 if __name__ == '__main__':
-    # m_3NxS_sorted = np.zeros( shape=(10,20) )
 
     optimized_sorted_m_3NxS = None
-
+    
 
     with open(SORTED_POINTCLOUD_NPY_FILEPATH, 'rb') as f:
         m_3NxS_sorted = np.load(f)
@@ -219,10 +226,7 @@ if __name__ == '__main__':
         print(type(m_3NxS_sorted))
 
         #viz some pt clouds and color the pts, to confirm the pts loaded correctly
-        # draw_point_cloud(m_3NxS_sorted[:,0]) #works
-
-
-        
+        draw_point_cloud(m_3NxS_sorted[:,0]) #works
 
         m_3NxS_sorted = m_3NxS_sorted[:3*WIDTH, 0:NUMs_SHAPE] #for testing
         print('m_3NxS_sorted',m_3NxS_sorted.shape)

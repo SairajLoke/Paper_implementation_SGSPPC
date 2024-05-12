@@ -4,7 +4,9 @@ import numpy as np
 import time
 
 from configs import WIDTH,NUMs_SHAPE,NUM_PT_FEATURES
+from configs import POINT_CLOUD_DATA, SORTED_POINTCLOUD_NPY_FILEPATH
 
+from tqdm import tqdm
 '''
 
 time taken for 5k clouds:
@@ -19,7 +21,7 @@ def process_point_cloud(pcld_dir,pcld_count):
     
     final_sorted_pcld = np.zeros( shape=(1, 3*WIDTH) )
     
-    for pcld_index in range(1,pcld_count+1):
+    for pcld_index in tqdm(range(1,pcld_count+1)):
         
 
         pcld_path = pcld_dir + str(pcld_index) + '.pcd'
@@ -63,14 +65,8 @@ def process_point_cloud(pcld_dir,pcld_count):
     final_sorted_pcld = final_sorted_pcld.transpose() 
     print('final_sorted_pcld shape: (post transpose): ', final_sorted_pcld.shape)
 
-    with open('3NxS_expt.npy', 'wb') as f: #sorted_ptcloud_3NxS.npy
+    with open(SORTED_POINTCLOUD_NPY_FILEPATH, 'wb') as f: #sorted_ptcloud_3NxS.npy
         np.save(f, np.array(final_sorted_pcld))
-
-
-start = time.time()
-process_point_cloud(POINT_CLOUD_DATA, 5)# NUMs_SHAPE)
-end = time.time()
-print('Time taken: ', end-start)
 
 
 def testsNviz():
@@ -110,7 +106,12 @@ def testsNviz():
     print(a)
 
 
+if __name__ == "__main__":
 
+    start = time.time()
+    process_point_cloud(POINT_CLOUD_DATA,  NUMs_SHAPE)
+    end = time.time()
+    print('Time taken: ', end-start)
 
 #-----------------------------------
 # mytree_array = kdt.build_kdtree_array(pcdnp)

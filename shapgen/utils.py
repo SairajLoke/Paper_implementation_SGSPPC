@@ -6,6 +6,8 @@ Plotting and drawing functions
 import matplotlib.pyplot as plt
 import open3d as o3d
 
+from configs import BASIS_SIZE, WIDTH, NUMs_SHAPE  
+
 def draw_point_cloud(ptcloud_matrix_3Nx1_old):
     print('point cloud old matrix shape:', ptcloud_matrix_3Nx1_old.shape)
     ptcloud_matrix_3Nx1 = ptcloud_matrix_3Nx1_old.reshape(-1,3) # check if it keeps xyz adjacent
