@@ -22,7 +22,7 @@ from numpy.random import default_rng
 import numpy as np
 import time
 
-from task2_pca import pca_using_svd
+from task2_pca import pca_using_svd, skcuda_pca_using_svd
 
 from utils import plot_error_vs_iters, draw_point_cloud
 from configs import NUMs_SHAPE, SWAP_K, ITERS_I
@@ -153,6 +153,7 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
 
     optimized_U = None
     optimized_S = None 
+    optimized_Vt = None
 
     for iter_idx in tqdm(range(iters_I)):
         pca_error_allswaps_list = []  
@@ -188,23 +189,26 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
             
 
             #m_3NxS has now swapped points i and j
+            U,S,Vt = None,None,None
 
-            U,S,Vt = pca_using_svd(m_3NxS)
+            if device == 'cuda':
+                U,S,Vt = skcuda_pca_using_svd(m_3NxS)
+            else:
+                U,S,Vt = pca_using_svd(m_3NxS)
             # print('U.Ut',np.dot(U,U.T).shape, np.dot(U,U.T ))
             # print('\n-----------------------------------------\n')
-            
-
-            U = torch.from_numpy(U[:,0:BASIS_SIZE]).to(device) #U is 3Nx3N, U[:,0:BASIS_SIZE] is 3Nx100
-            S = np.diag(S)
-            S = torch.from_numpy(S[0:BASIS_SIZE, 0:BASIS_SIZE]).to(device) #S is 100, S[0:BASIS_SIZE] is 100
-            Vt = torch.from_numpy(Vt[0:BASIS_SIZE, 0:NUMs_SHAPE]).to(device) #Vt is 3NxS, Vt[0:BASIS_SIZE] is 100xS
-            print('U:', U.get_device(), 'S:', S.get_device(), 'Vt:', Vt.get_device())
+                U = torch.from_numpy(U[:,0:BASIS_SIZE]).to(device) #U is 3Nx3N, U[:,0:BASIS_SIZE] is 3Nx100
+                S = np.diag(S)
+                S = torch.from_numpy(S[0:BASIS_SIZE, 0:BASIS_SIZE]).to(device) #S is 100, S[0:BASIS_SIZE] is 100
+                Vt = torch.from_numpy(Vt[0:BASIS_SIZE, 0:NUMs_SHAPE]).to(device) #Vt is 3NxS, Vt[0:BASIS_SIZE] is 100xS
+                print('U:', U.get_device(), 'S:', S.get_device(), 'Vt:', Vt.get_device())
 
             print('U:', U.shape, 'S:', S.shape, 'Vt:', Vt.shape)  #U: (m, 100) S: (100,) Vt: (100, 80)
             print('U.Ut',(U@U.T).shape, U@U.T )
             
             # break
             avg_pca_error_across_shapes = pca_reconstruction_error(U,S,Vt, m_3NxS)
+
             print('pca_error:',  avg_pca_error_across_shapes.shape, avg_pca_error_across_shapes)
 
             k_pca_errors += avg_pca_error_across_shapes
@@ -215,6 +219,8 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
                 print(f"{iter_idx}, {swap_idx} pca error reduced")
                 optimized_U = U
                 optimized_S = S
+                optimized_Vt = Vt
+
                 #keep changed matrix    
             else:
                 #revert back to original
@@ -232,14 +238,14 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
         print(pca_error_alliters_list)
 
     #optimized 
-    return m_3NxS, pca_error_alliters_list, optimized_U, optimized_S
+    return m_3NxS, pca_error_alliters_list, optimized_U, optimized_S, optimized_Vt
 
 
 def get_optimized_pt_orderingNdraw(m_3NxS,swaps_K, iters_I):
     print('inside get_optimized_pt_orderingNdraw')
     print('m_3NxS',type(m_3NxS), m_3NxS.shape)
 
-    m_3NxS, pca_error_periters_list, optimized_U,optimized_S = optimizing_pt_ordering(m_3NxS,swaps_K, iters_I)
+    m_3NxS, pca_error_periters_list, optimized_U,optimized_S, optimized_Vt = optimizing_pt_ordering(m_3NxS,swaps_K, iters_I)
     print(type(m_3NxS), type(pca_error_periters_list), type(optimized_U))
 
     pca_error_periters_list = [x.cpu().detach().numpy() for x in pca_error_periters_list]

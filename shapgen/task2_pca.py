@@ -45,16 +45,17 @@ def pca_using_svd(m_3NxS):
 
 def skcuda_pca_using_svd(m_3NxS):
 
+    import skcuda.linalg as linalg
+    linalg.init()
+
     #do some preprocessing ( like centering of matrix ,
     #  check what exactly)
     #-------------------------------------------
-    if device == 'cuda':
-        m_3NxS = m_3NxS.clone().detach().to('cpu').numpy()
 
-    U, S, Vt = skcudala.svd(m_3NxS, full_matrices=True)
+    u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, 'S', 'S')
     #expected shapes?  seems U V are switched? not sure
+    print(type(u_gpu), type(s_gpu), type(vh_gpu))
+    print('u_gpu:', u_gpu.shape, 's_gpu:', s_gpu.shape, 'vh_gpu:', vh_gpu.shape)
 
-    # V = Vt.T 
-    print('U:', U.shape, 'S:', S.shape, 'Vt:', Vt.shape)
     # return U[:,0:BASIS_SIZE],S[0:BASIS_SIZE,0:BASIS_SIZE],V[0:BASIS_SIZE, 0:BASIS_SIZE]
-    return U,S,Vt
+    return u_gpu,s_gpu,vh_gpu

@@ -37,7 +37,8 @@ def plot_error_vs_iters(pca_error_periters_list,iters_idx):
     
     savepath = f'plots/pca_error_vs_iters_{iters_idx}_{SWAP_K}_{BASIS_SIZE}_{WIDTH}_{NUMs_SHAPE}.png'
     plt.savefig(savepath)
-    plt.show()
+    # plt.show()
+    plt.close()
 
     return 
 
