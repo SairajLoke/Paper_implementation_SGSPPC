@@ -65,6 +65,8 @@ something like this
  `
  python task1_space_partitioning_point_cloud.py
  `
+
+In this the order is inorder traversal of the kdtree.
  
 PCA using SVD code can be found in `task2_pca.py` 
 
@@ -72,7 +74,9 @@ To do further optimization over the order of points run
  `
  python task3_optimizing_pt_ordering.py
  `
-(the torch version is also given, but wasnt that useful
+(the torch version of the file is also given, but wasnt that useful)
+
+I think we can further optimize this by swapping a set of adjacent points with another adjacent set of points rather than just 2.
 
 The GAN has been implemented using 4 Linear each in disc + gen,
 the architecture is a bit modified (compared to the paper),
