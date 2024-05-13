@@ -22,7 +22,7 @@ def generate_shape():
     #0 represents the architectural changes if any
 
     generator = Generator(noise_size=BASIS_SIZE, vt_size=BASIS_SIZE).to(device)
-    generator.load_state_dict(torch.load(GENERATOR_MODEL_PATH))
+    generator.load_state_dict(torch.load(GENERATOR_MODEL_PATH), strict=True)
     generator.eval()
     
      #--------------------------------------------------------
