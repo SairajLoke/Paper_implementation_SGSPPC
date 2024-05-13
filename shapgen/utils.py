@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import open3d as o3d
 
 from configs import BASIS_SIZE, WIDTH, NUMs_SHAPE , ITERS_I, SWAP_K, PLOTPATH_PCA
+from configs import TRAINING_ID
 
 def draw_point_cloud(ptcloud_matrix_3Nx1_old):
     print('point cloud old matrix shape:', ptcloud_matrix_3Nx1_old.shape)
@@ -44,26 +45,39 @@ def plot_error_vs_iters(pca_error_periters_list,iters_idx):
 
 def plot_losses(Gene_losses, Disc_losses):
     #plot the losses of the generator and discriminator
-    
+    print(type(Gene_losses[0]))
     plt.plot(Gene_losses, label='Generator Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Losses vs Epochs')
+    plt.legend()
+    plt.savefig(f'plots/losses_vs_epochs_G{TRAINING_ID}.png')
+    plt.show()
+
+    #separately as scales are different
     plt.plot(Disc_losses, label='Discriminator Loss')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.title('Losses vs Epochs')
     plt.legend()
-    
-    plt.savefig('plots/losses_vs_epochs.png')
-    plt.show()
-
+    plt.savefig(f'plots/losses_vs_epochs_D{TRAINING_ID}.png')
     return
 
-def save_column_matrix_as_pcd(save_path, column_matrix, idx):
+def save_column_matrix_as_pcd(save_path, column_matrix):
     #save the column matrix as a point cloud data file
     column_matrix = column_matrix.reshape(3,-1) # check if it keeps xyz adjacent
-
+    print(type(column_matrix), column_matrix.shape)
+    
+    
+    # From numpy to Open3D
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(column_matrix) #column_matrix is a 3xN matrix
-    path = save_path + '_' + +str(idx)+'.pcd'
+    path = save_path + '_' +'.pcd'
     o3d.io.write_point_cloud(path, pcd)
+
+
+    pcd.points = o3d.utility.Vector3dVector(np_points)
+    o3d.io.write_point_cloud('C:/Users/Sairaj Loke/Desktop/Preimage/Preimage_Intern_Task/shapgen/eg.pcd', pcd)
+  
 
     return 

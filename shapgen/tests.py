@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import open3d as o3d
 
 def normtests():
 
@@ -165,6 +166,14 @@ def numpyrepeats():
     print(a)
     print((a.sum(axis=0)).sum(axis=0))
 
+def npy2o3d():
+    np_points = np.random.rand(100, 3)
+    print(type(np_points), np_points.shape)
+    # From numpy to Open3D
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(np_points)
+    o3d.io.write_point_cloud('C:/Users/Sairaj Loke/Desktop/Preimage/Preimage_Intern_Task/shapgen/eg.pcd', pcd)
+
 if __name__ == '__main__':
     # normtests()
     # mean_test()
@@ -177,4 +186,5 @@ if __name__ == '__main__':
     # pca_recon()
     # brdctg()
     # torchexp()
-    numpyrepeats()
+    # numpyrepeats()
+    npy2o3d()

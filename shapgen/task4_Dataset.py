@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from configs import REAL_LABEL
 
-
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 class ShapeDataset(torch.utils.data.Dataset):
     def __init__(self,training_data_path):
@@ -11,9 +11,9 @@ class ShapeDataset(torch.utils.data.Dataset):
 
         #optimized and sorted point cloud
         vt_data = np.load(training_data_path)
-        print("Loaded pcd_data :" , vt_data.shape) # should be BASIS_SIZE x NUMs_SHAPE = eg. 100x2000
+        print("Loaded vt_data :" , vt_data.shape) # should be BASIS_SIZE x NUMs_SHAPE = eg. 100x2000
 
-        self.vt_data = torch.tensor(vt_data, dtype=torch.float32)#TODO check precision
+        self.vt_data = torch.tensor(vt_data, dtype=torch.float32).to(device) #TODO check precision
         
         print(type(vt_data))
         # print(type(pcd_data.points))

@@ -69,96 +69,86 @@ if __name__ == '__main__':
     vtloader = torch.utils.data.DataLoader(vtdataset, batch_size=BATCH_SIZE, shuffle=True)
 
     # test the vt data by visualizing it using the U and Sigma matrices stored in the configs
-    real_batch = next(iter(pcdloader)).to(device)
+    real_batch = next(iter(vtloader))
 
-    for vtcol in real_batch:
-        print('vtcol', vtcol.shape)
+    #--------------------------------------------------------
+    #seems good, checked the viz, uncomment to see the viz
+    # make sure to have the following configs
+    # for vtcol in real_batch:
+    #     print('vtcol', vtcol.shape)
 
-        U = np.load(OPTIMIZED_SORTED_U_FILEPATH)
-        print('U', U.shape)
-        Sig = np.load(OPTIMIZED_SIGMA_FILEPATH)
-        print('Sig', Sig.shape)
+    #     #torch.as_tensor() can be used to convert numpy arrays to tensors without copying but still...
+    #     U = torch.tensor( np.load(OPTIMIZED_SORTED_U_FILEPATH), dtype=torch.float32).to(device) 
+    #     print('U', U.shape)
+    #     Sig = torch.tensor(np.load(OPTIMIZED_SIGMA_FILEPATH), dtype=torch.float32).to(device)
+    #     print('Sig', Sig.shape)
 
-        p = U@Sig@vtcol
+    #     p = U@Sig@vtcol
 
-        p = p.reshape(-1,3)
-        print(p.shape) 
-        p = p.cpu().detach().numpy()
-        print(type(p))
+    #     # p = p.reshape(-1,3)
+    #     # print(p.shape) 
+    #     p = p.cpu().detach().numpy()
+    #     print(type(p))
 
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(p)
-        draw_point_cloud(pcd)
+    #     draw_point_cloud(p)
+    #--------------------------------------------------------
     
-    
 
 
-    # #build the models
-    # netG = Generator(noise_size=BASIS_SIZE,pcd_size=BASIS_SIZE).to(device)
-    # print(netG)
+    #build the models
+    netG = Generator(noise_size=BASIS_SIZE,vt_size=BASIS_SIZE).to(device)
+    print(netG)
     # #model init
 
-    # netD = Discriminator(pcd_size=NUM_PT_FEATURES*WIDTH ).to(device)
-    # print(netD)
+    netD = Discriminator(vt_size=BASIS_SIZE ).to(device)
+    print(netD)
     
-    # netG.train()
-    # netD.train()
+    netG.train()
+    netD.train()
 
-    # optimizerD = optim.Adam(netD.parameters(), lr=LRD, betas=(BETA1, 0.999))
-    # optimizerG = optim.Adam(netG.parameters(), lr=LRG, betas=(BETA1, 0.999))
+    optimizerD = optim.Adam(netD.parameters(), lr=LRD, betas=(BETA1, 0.999))
+    optimizerG = optim.Adam(netG.parameters(), lr=LRG, betas=(BETA1, 0.999))
 
-    # Gene_losses = []
-    # Disc_losses = []
+    Gene_losses = []
+    Disc_losses = []
 
 
-    # for epoch in range(NUM_EPOCHS):
-    #     epoch_lossD = torch.tensor(0.0,dtype=torch.float32).to(device)
-    #     epoch_lossG = torch.tensor(0.0,dtype=torch.float32).to(device)
-    #     for iteridx , data in enumerate(pcdloader,0):
-            
-    #         # trainD = False
+    for epoch in range(NUM_EPOCHS):
+        # epoch_lossD = torch.tensor(0.0,dtype=torch.float32).to(device)
+        # epoch_lossG = torch.tensor(0.0,dtype=torch.float32).to(device)
+        epoch_lossD = 0.0
+        epoch_lossG = 0.0
 
-    #         if data is None:
-    #             print(f'data is none {epoch} {i} $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
-    #             continue
-    #         # Training the Discriminator for K_disc iterations
-    #         #----------------------------------------------------------------  
-    #         # #put a accuracy check on discriminator (train if accuracy < 80)
-    #         # running_loss = 0.0 
-    #         # for k in range(DISC_K_ITERS):
+        for iteridx , data in enumerate(pcdloader,0):
 
-    #         print('training disc')
-    #         netD.zero_grad()
-    #         print(type(data[0][0]))
-    #         #real data
-    #         # labelr = REAL_LABEL.to(device)
-    #         output_real, activns_real = netD(data)
-    #         print('real Disc ouput',output_real.shape, output_real)
+            if data is None:
+                print(f'data is none {epoch} {i} $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+                continue
 
-    #         #check accuracy of discriminator-----------------------------
-    #         # test_output_fake, test_activns_fake = netD(data)
-    #         # print('test output fake', test_output_fake.shape, test_output_fake)
-    #         # test_output_real = torch.where( output_real > 0.5, torch.tensor(1), torch.tensor(0))
-    #         # test_output_fake = torch.where( test_output_fake > 0.5, torch.tensor(1), torch.tensor(0))
-    #         # accuracy =  (torch.count_nonzero() + test_output_fake.size - torch.count_nonzero())/(test_output_fake.size + test_output_real.size)
-    #         # ones = (test_output_real == 1.).sum(dim=0)#check dim 
-    #         # zeros = (test_output_fake == 0.).sum(dim=0)
-    #         # accuracy = (ones + zeros)/(test_output_fake.shape(0) + test_output_real.shape(0))
-    #         # if(accuracy < 0.8):
-    #         #     trainD = True
-    #         # -----------------------------------------------------------
+            #----------------------------------------------------------------
+            # Training the Discriminator for K_disc iterations
+            #----------------------------------------------------------------  
+            # running_loss = 0.0 
+            # for k in range(DISC_K_ITERS): #not used here, but was mentioned in orig GAN paper
 
-    #         if torch.isnan(output_real).any():
-    #             print('output real contains nan')
-    #             break
+            #some checks
+            netD.zero_grad()
+            print(type(data[0][0]))
+            #--------------------------------------------------------------
 
-    #         # errD_real = criterion(output, REAL_LABEL)
-    #         lossD_real_v = torch.log(output_real)
-    #         # D_x = output.mean()
-    #         lossD_real = lossD_real_v.mean() #expectation(avg) of Log(D(x)) over the batches
-    #         # lossD_real.backward()
-    #         #mean before or after log
-    #         # 
+            #real data
+            output_realD, activns_real = netD(data) #BATCH_SIZEx100
+            print('real Disc ouput',output_real.shape, output_real)
+            # -----------------------------------------------------------
+            if torch.isnan(output_realD).any():
+                print('output real contains nan')
+                break
+
+            lossD_real_v = torch.log(output_real)
+            lossD_real = lossD_real_v.mean() #expectation(avg) of Log(D(x)) over the batches
+            # lossD_real.backward()
+            #mean before or after log
+            # 
 
             
     #         #fake data--------------------------------------
@@ -172,18 +162,34 @@ if __name__ == '__main__':
     #         # So no gradient will be backpropagated to netG along this variable(fake_pcd).
     #         print('fake disc output', output_fake.shape, output_fake)
 
-    #         lossD_fake_v = torch.log(1 - output_fake) #check 
-    #         lossD_fake = lossD_fake_v.mean()
-    #         # lossD_fake.backward()
-    #         # D_G_z1 = output.mean().item()
-    #         lossD = lossD_real + lossD_fake
-    #         lossD = -1*lossD #mi
+                 # #put a accuracy check on discriminator (train if accuracy < 80)
+            #check accuracy of discriminator-----------------------------
+            # test_output_fake, test_activns_fake = netD(data)
+            print('test output fake', test_output_fake.shape, test_output_fake)
 
-    #         # if trainD == True:
-    #         lossD.backward()
-    #         optimizerD.step()
+            test_output_real = torch.where( output_real > 0.5, torch.tensor(1), torch.tensor(0))
+            test_output_fake = torch.where( test_output_fake > 0.5, torch.tensor(1), torch.tensor(0))
+            accuracy =  (torch.count_nonzero() + test_output_fake.size - torch.count_nonzero())/(test_output_fake.size + test_output_real.size)
+            ones = (test_output_real == 1.).sum(dim=0)#check dim 
+            zeros = (test_output_fake == 0.).sum(dim=0)
+            Daccuracy = (ones + zeros)/(test_output_fake.shape(0) + test_output_real.shape(0))
+            
 
-    #             # running_loss += lossD.item() #TODO
+
+            if Daccuracy < 0.8: #train discriminator only if accuracy < 80
+                lossD_fake_v = torch.log(1 - output_fake) #check 
+                lossD_fake = lossD_fake_v.mean()
+                # lossD_fake.backward()
+                # D_G_z1 = output.mean().item()
+                lossD = lossD_real + lossD_fake
+                lossD = -1*lossD #mi
+                # if trainD == True:
+                lossD.backward()
+                optimizerD.step()
+
+                running_loss += lossD.item() #TODO
+            else:
+                lossD = 0.8000 #to plot 
 
     #         #----------------------------------------------------------------
     #         # Training the Generator
