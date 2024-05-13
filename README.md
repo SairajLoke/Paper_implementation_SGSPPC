@@ -1,7 +1,8 @@
-# Preimage_Intern_Task
+# Preimage_Tasks
+Paper - https://arxiv.org/pdf/1707.06267
 
+Below is the implementation of the same
 # Tasks
-
 1. Kdtree
 2. PCA
 3. Iterative Point Ordering
@@ -15,36 +16,79 @@ Run the following code: (windows specific venv env activate cmd)
  ```
  pip -m env preimage_env
  cd preimage_env && Scripts/activate
- git clone https://github.com/SairajLoke/Preimage_Intern_Task
- cd Preimage_Intern_Task/shapgen
- mkdir point_cloud_matrices plots
+ git clone https://github.com/SairajLoke/Preimage_Tasks
+ cd Preimage_Tasks/shapgen
  pip install -r requirements.txt
  ```
+create additional directionaries namely
+- models
+- point_cloud_matrices  ( to keep intermediate U Vt Sigma & PointCloud data in matrix format)
+- train (required while training)
+
  now your setup is ready! 
+
+ ## To quickly run inference run -
+ `python .\task6_inference.py`
+ 
+ mention appropriate 
+ - training id and epochs associated with the model to load
+ - paths for U and Sigma matrices stored as npy files (shared on google drive)
+ - path for loading generator
+
+you can expect a point cloud window popup, along with the correspond pcd stored in inference folder
+something like this
+![generated_tid1_e8](https://github.com/SairajLoke/Preimage_Tasks/assets/104747561/146f6422-ce28-4468-bb6c-961a08e2d857)
+
  
  ## About the files and folders
- - configs has all the params to tweak and the paths
- - You can viz all plots in plots folders and intermediate sorted npy matrices are saved in point_cloud_matrices folder 
- - ( their (matrices) size is too big, so sharing them files through google drive)
- - 
- 
+
+ ### files - 
+ - configs:  has all the params to tweak and the paths
+ - tests: tests i performed on various lib methods during the entire process
+- notes: some pts
+ - colab configs and colab notebook were used to use colab specs in a better way
+ - other task related files mentioned below
+   
+### folders
+ - You can viz all plots in *plots* folders
+ - *latest* : impt results to look at from the different tasks
+ - *point_cloud_matrices* : Intermediate sorted npy matrices are saved in folder 
+                            ( their (matrices) size is too big, so sharing them files through google drive)
+ - *models* : has all the checkpoints saved ( as given in the configs - constant: GENERATOR_MODEL_DIR
+ - *train* : not necessary (just to store the Vt matrices used in training), can be changed by paths in configs
+ - *inference* : has saved pcd files of generated ptclds
+
+
 ## Inside shapgen folder - 
  To do a kdtree based space partitioning of given point clouds
+ 
  `
  python task1_space_partitioning_point_cloud.py
  `
-PCA using SVD code can be found in `task2_pca.py`
- To do further optimization over the order of points run
+ 
+PCA using SVD code can be found in `task2_pca.py` 
+
+To do further optimization over the order of points run
  `
  python task3_optimizing_pt_ordering.py
  `
- 
+(the torch version is also given, but wasnt that useful
+
+The GAN has been implemented using 4 Linear each in disc + gen,
+the architecture is a bit modified (compared to the paper),
+specifically - 
+ tanh as activation in generator (instead of relu), to generate negative vals as well
+
 To train a GAN run
 `
-python task5_training.py
+python task5_training_new.py
 `
+Training uses the Discrimator's activation based loss for generator and vanilla GAN loss for discriminator.
+Moreover Discriminator trains only if accuracy of Disc < 0.8
+
 To run inference using pretrained gan weigths
-`python shapegeneration.py`
+`python task6_inference.py`
+
 
 ## Some selected results from PCA
 
@@ -66,6 +110,9 @@ The training losses can be seen as follows : (saved in train plots)
 
 ## References
 
+papers
+- https://arxiv.org/pdf/1406.2661 (2014 GAN)
+- https://arxiv.org/pdf/1606.03498 (the improved generator loss)
 
 for theory:
 ### PCD
@@ -88,3 +135,5 @@ https://arxiv.org/pdf/1406.2661 (GANs 2014 pseudo code)
 
 Pytorch , numpy  , Open3d Documentation .
 stackoverflow ( for quick referencing queries like matrix to open3d pt cloud, etc) 
+
+
