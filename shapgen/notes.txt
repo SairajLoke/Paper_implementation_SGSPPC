@@ -4,8 +4,7 @@
 - the handle part
 - others
 
-visualize these shape basis
 
 [-1,1) is the noise
 
-# generator generates mostly zero 
+# generator generates mostly zero  -  solved using tanh*0.5 in generator output

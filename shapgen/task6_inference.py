@@ -1,5 +1,3 @@
-
-
 import torch
 import torch.optim as optim
 import open3d as o3d
@@ -16,7 +14,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 def generate_shape():
     # Load the model
     
-    generator_id= 1
+    generator_id= 2
     gen_epochs = 8
     GENERATOR_MODEL_PATH = f'{GENERATOR_MODEL_DIR}/netG_tid{generator_id}_e{gen_epochs}.pth' # training id 0, epoch 9
     #0 represents the architectural changes if any

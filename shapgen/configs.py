@@ -14,7 +14,7 @@ NUMs_SHAPE = 2000 #200  # 5000  #S in paper #5000 toomuch time on cpu should be 
 
 PLOTPATH_PCA = f'C:/Users/Sairaj Loke/Desktop/Preimage/Preimage_Intern_Task/shapgen/plots/PCA/'
 PLOTPATH_TRAINING = f'C:/Users/Sairaj Loke/Desktop/Preimage/Preimage_Intern_Task/shapgen/plots/training/'
-PLOTPATH_GENERATED = f'C:/Users/Sairaj Loke/Desktop/Preimage/Preimage_Intern_Task/shapgen/plots/generated/'
+PLOTPATH_GENERATED = f'C:/Users/Sairaj Loke/Desktop/Preimage/Preimage_Intern_Task/shapgen/inference/generated/'
 
 DECREASING_LOSS_PLOTPATH = f'C:/Users/Sairaj Loke/Desktop/Preimage/Preimage_Intern_Task/shapgen/plots/decreasing_pca_loss/decreasing_loss_plot_b{BASIS_SIZE}_nf{NUM_PT_FEATURES}_sk{SWAP_K}_iI{ITERS_I}_w{WIDTH}_ns{NUMs_SHAPE}.png'
 POINT_CLOUD_DATA = 'C:/Users/Sairaj Loke/Desktop/Preimage/shapenet-chairs-pcd/'
@@ -44,6 +44,8 @@ FAKE_LABEL = 0
 BATCH_SIZE = 3 #(say1)
 BETA1 = 0.5
 DISC_K_ITERS = 1 # >1 not supported currently in code makesure to keep it 1
-TRAINING_ID = 1
+TRAINING_ID = 2
 
 #1 = changed relu in generator was seeing almost zeros in the generated shapes
+#2 = increased epohs to 100, changed actvn in gen to relu again
+

@@ -65,7 +65,7 @@ def plot_losses(Gene_losses, Disc_losses):
 
 def save_column_matrix_as_pcd(save_path, column_matrix):
     #save the column matrix as a point cloud data file
-    column_matrix = column_matrix.reshape(3,-1) # check if it keeps xyz adjacent
+    column_matrix = column_matrix.reshape(-1,3) # check if it keeps xyz adjacent
     print(type(column_matrix), column_matrix.shape)
     
     
@@ -73,11 +73,9 @@ def save_column_matrix_as_pcd(save_path, column_matrix):
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(column_matrix) #column_matrix is a 3xN matrix
     path = save_path + '_' +'.pcd'
+
+    
     o3d.io.write_point_cloud(path, pcd)
-
-
-    pcd.points = o3d.utility.Vector3dVector(np_points)
-    o3d.io.write_point_cloud('C:/Users/Sairaj Loke/Desktop/Preimage/Preimage_Intern_Task/shapgen/eg.pcd', pcd)
   
 
     return 

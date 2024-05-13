@@ -57,7 +57,7 @@ class Generator(nn.Module):
 
         self.relu = nn.ReLU()
         self.leakyrelu = nn.LeakyReLU(0.1)
-        self.gact = self.leakyrelu
+        self.gact = self.relu
         self.tanhout = nn.Tanh()
 
     def forward(self, z):
