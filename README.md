@@ -46,7 +46,18 @@ python task5_training.py
 To run inference using pretrained gan weigths
 `python shapegeneration.py`
 
-references
+## Some selected results
+
+Sorting using the algo mentioned ( used a matrix representation for calculating the recon error for all shapes rather than iterating over all the vertical pt clouds separately, this considerably reduced the pca recon error calc time ( around 3times less for particular configs)
+
+for 2000 chair shapes ( 5k was taking too long) in the SVD section.
+10 swaps per iterations for 50 iterations
+![pca_error_vs_iters_50_10_100_1000_2000](https://github.com/SairajLoke/Preimage_Tasks/assets/104747561/c231f0f3-1e60-4e35-8685-8356a69f3fb2)
+
+
+
+
+## References
 
 for theory:
 ### PCD
