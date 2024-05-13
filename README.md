@@ -1,4 +1,4 @@
-# Preimage_Tasks
+# Paper implementation 
 Paper - https://arxiv.org/pdf/1707.06267
 
 Below is the implementation of the same
