@@ -121,6 +121,8 @@ class Discriminator(nn.Module):
         activation4 = out
         print(activation4.shape)
         #shouldnt the output be 1?
+        # as they are not really using the output of the last layer so it is 
+        # kept as activation i suppose
         out = self.fc5(out)
         out = self.sigmod(out)
 

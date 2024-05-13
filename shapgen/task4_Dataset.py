@@ -9,6 +9,7 @@ class ShapeDataset(torch.utils.data.Dataset):
     def __init__(self,training_data_path):
         # super(ShapeDataset, self).__init__()
 
+        #optimized and sorted point cloud
         pcd_data = np.load(training_data_path)
         print("Loaded pcd_data :" , pcd_data.shape)
         self.pcd_data = torch.tensor(pcd_data, dtype=torch.float32) #???

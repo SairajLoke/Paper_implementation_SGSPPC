@@ -99,9 +99,11 @@ if __name__ == '__main__':
         epoch_lossD = torch.tensor(0.0,dtype=torch.float32).to(device)
         epoch_lossG = torch.tensor(0.0,dtype=torch.float32).to(device)
         for i, data in enumerate(pcdloader,0):
+            
+            # trainD = False
 
             if data is None:
-                print(f'data is none {epoch} {i}')
+                print(f'data is none {epoch} {i} $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
                 continue
             # Training the Discriminator for K_disc iterations
             #----------------------------------------------------------------  
@@ -116,6 +118,20 @@ if __name__ == '__main__':
             # labelr = REAL_LABEL.to(device)
             output_real, activns_real = netD(data)
             print('real Disc ouput',output_real.shape, output_real)
+
+            #check accuracy of discriminator-----------------------------
+            # test_output_fake, test_activns_fake = netD(data)
+            # print('test output fake', test_output_fake.shape, test_output_fake)
+            # test_output_real = torch.where( output_real > 0.5, torch.tensor(1), torch.tensor(0))
+            # test_output_fake = torch.where( test_output_fake > 0.5, torch.tensor(1), torch.tensor(0))
+            # accuracy =  (torch.count_nonzero() + test_output_fake.size - torch.count_nonzero())/(test_output_fake.size + test_output_real.size)
+            # ones = (test_output_real == 1.).sum(dim=0)#check dim 
+            # zeros = (test_output_fake == 0.).sum(dim=0)
+            # accuracy = (ones + zeros)/(test_output_fake.shape(0) + test_output_real.shape(0))
+            # if(accuracy < 0.8):
+            #     trainD = True
+            # -----------------------------------------------------------
+
             if torch.isnan(output_real).any():
                 print('output real contains nan')
                 break
@@ -147,6 +163,7 @@ if __name__ == '__main__':
             lossD = lossD_real + lossD_fake
             lossD = -1*lossD #mi
 
+            # if trainD == True:
             lossD.backward()
             optimizerD.step()
 
@@ -175,7 +192,7 @@ if __name__ == '__main__':
             #TODO test lossG
             output_reall, activns_reall = netD(data) # doing again as the graph is done ? after previous backward pass 
             #check how to retain graph for the netD
-            
+
             lossG = get_generator_loss(activns_fake,  activns_reall)
             lossG.backward()
             optimizerG.step()
@@ -190,7 +207,10 @@ if __name__ == '__main__':
         Gene_losses.append(epoch_lossG)
         Disc_losses.append(epoch_lossD)
         
-        
+        if epoch % (NUM_EPOCHS/5) == 1:
+            torch.save(netG.state_dict(), f'./models/netG_{epoch}_{id}.pth')
+            torch.save(netD.state_dict(), f'./models/netD_{epoch}_{id}.pth')
+
         print('$$$--------------------epoch idx:',epoch,  'lossD:',lossD, 'lossG:',lossG, '--------------------$$$') #
 
     plot_losses(Gene_losses, Disc_losses)

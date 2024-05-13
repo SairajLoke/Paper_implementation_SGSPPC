@@ -6,10 +6,10 @@ from numpy import linalg as la
 
 from configs import BASIS_SIZE
 # U should be calculated on the entire dataset right?
+import torch
+# from skcuda import linalg as skcudala
 
-
-
-
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def pca_old():
@@ -31,6 +31,8 @@ def pca_using_svd(m_3NxS):
     #do some preprocessing ( like centering of matrix ,
     #  check what exactly)
     #-------------------------------------------
+    if device == 'cuda':
+        m_3NxS = m_3NxS.clone().detach().to('cpu').numpy()
 
     U, S, Vt = la.svd(m_3NxS, full_matrices=True)
     #expected shapes?  seems U V are switched? not sure
@@ -41,3 +43,18 @@ def pca_using_svd(m_3NxS):
     return U,S,Vt
 
 
+def skcuda_pca_using_svd(m_3NxS):
+
+    #do some preprocessing ( like centering of matrix ,
+    #  check what exactly)
+    #-------------------------------------------
+    if device == 'cuda':
+        m_3NxS = m_3NxS.clone().detach().to('cpu').numpy()
+
+    U, S, Vt = skcudala.svd(m_3NxS, full_matrices=True)
+    #expected shapes?  seems U V are switched? not sure
+
+    # V = Vt.T 
+    print('U:', U.shape, 'S:', S.shape, 'Vt:', Vt.shape)
+    # return U[:,0:BASIS_SIZE],S[0:BASIS_SIZE,0:BASIS_SIZE],V[0:BASIS_SIZE, 0:BASIS_SIZE]
+    return U,S,Vt

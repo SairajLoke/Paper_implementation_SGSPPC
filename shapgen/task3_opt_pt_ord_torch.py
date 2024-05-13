@@ -27,80 +27,17 @@ from task2_pca import pca_using_svd
 from utils import plot_error_vs_iters, draw_point_cloud
 from configs import NUMs_SHAPE, SWAP_K, ITERS_I
 from configs import NUM_PT_FEATURES, WIDTH, BASIS_SIZE
-from configs import  SORTED_POINTCLOUD_NPY_FILEPATH, OPTIMIZED_SORTED_m_3NxS_NPY_FILEPATH, OPTIMIZED_SORTED_U_FILEPATH
+from configs import  SORTED_POINTCLOUD_NPY_FILEPATH, OPTIMIZED_SORTED_m_3NxS_NPY_FILEPATH 
+from configs import OPTIMIZED_SIGMA_FILEPATH, OPTIMIZED_SORTED_U_FILEPATH
 rng = default_rng()
 
-from numpy import linalg as la
+import torch
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 from tqdm import tqdm   
 
-
-def pca_reconstruction_error_matrix(U,S,Vt, m_3NxS):
-    print('calculating_pca_error')
-    print('m_3NxS.shape', m_3NxS.shape)
-    mu = np.mean(m_3NxS, axis=1) #calculating at every swap as the order of points is changing or instead i can swap mu as well 
-    print('mu.shape', mu.shape)
-    mu = np.expand_dims(mu, axis=1)
-    mu = np.repeat(mu,NUMs_SHAPE, axis=1)
-    sum_error = 0
-
-    
-    # for s in tqdm(range(NUMs_SHAPE)):
-    #no need to avg over shapes?
-    # print(m_3NxS.shape) #s
-    # Ps = m_3NxS  # 3Nx1
-    # Ps = np.expand_dims(Ps, axis=1)
-    # print('Ps.shape', Ps.shape)
-    diff1 = m_3NxS - mu # 3Nx1
-
-    val = U@U.T@(diff1) - diff1  # (U@U.T@Diff1 + mu) - Ps
-    print('val', val.shape, val)
-    val = val[:,:]**2
-
-    error_mag_sum_for_all_shapes = (val.sum(axis=0)).sum(axis=0)
-    
-    if val.any() >= 0e+00 :  #this should be zero , check
-        print('val not zero')
-    else:
-        print('val is zero')
-        
-
-
-    return error_mag_sum_for_all_shapes# 1x1 
-
 def pca_reconstruction_error(U,S,Vt, m_3NxS):
-    print('calculating_pca_error')
-    print('m_3NxS.shape', m_3NxS.shape)
-    mu = np.mean(m_3NxS, axis=1) #calculating at every swap as the order of points is changing or instead i can swap mu as well 
-    print('mu.shape', mu.shape)
-    mu = np.expand_dims(mu, axis=1)
-    sum_error = 0
-
-    
-    for s in tqdm(range(NUMs_SHAPE)):
-    #no need to avg over shapes?
-        print(m_3NxS.shape) #s
-        Ps = m_3NxS[:,s]  # 3Nx1
-        Ps = np.expand_dims(Ps, axis=1)
-        print('Ps.shape', Ps.shape)
-        diff1 = Ps - mu # 3Nx1
-
-        val = U@U.T@(diff1) - diff1  # (U@U.T@Diff1 + mu) - Ps
-        
-        print(val.shape , val)
-        error_mag_for_one_shape = val.T@val
-        
-        if val.any() >= 0e+00 :  #this should be zero , check
-            print('val not zero')
-        else:
-            print('val is zero')
-            
-        sum_error += error_mag_for_one_shape
-
-
-    return sum_error[0][0] # 1x1
-
-def oldpca_reconstruction_error(U,S,Vt, m_3NxS):
     print('calculating_pca_error')
     '''
     avg across all shapes ?
@@ -133,22 +70,25 @@ def oldpca_reconstruction_error(U,S,Vt, m_3NxS):
     #
     # val = newproduct - 
     print('m_3NxS.shape', m_3NxS.shape)
-    mu = np.mean(m_3NxS, axis=1) #calculating at every swap as the order of points is changing or instead i can swap mu as well 
+    mu = torch.mean(m_3NxS, dim=1) #calculating at every swap as the order of points is changing or instead i can swap mu as well 
     print('mu.shape', mu.shape)
-    mu = np.expand_dims(mu, axis=1)
-    sum_error = 0
+    # mu = mu.expand(NUM_PT_FEATURES,NUMs_SHAPE).to(device)
+    mu = mu.unsqueeze(1)
+    mu = mu.repeat(1,NUMs_SHAPE).to(device)
+    sum_error = torch.tensor(0.0).to(device)
 
     
     # where h is an n x I column vector of all Is:
-# for i = I
-    # B = X - huT
-    if 0:
-        Ps = m_3NxS  # 3Nx1
+    # for i = I
+        # B = X - huT
+    
+    if 1:
+        Ps = m_3NxS.to(device)  # 3Nx1
         # Ps = np.expand_dims(Ps, axis=1)
         print('Ps.shape', Ps.shape)
         # diff1 = Ps - mu # 3Nx1
         # val = np.dot(U,U.T)@(diff1) - diff1
-        recon = U@S@Vt
+        recon = (U@S@Vt).to(device)
         print('recon', recon.shape)
 
         #----------------------
@@ -160,43 +100,41 @@ def oldpca_reconstruction_error(U,S,Vt, m_3NxS):
         #     print('val not zero')
         # else:
         #     print('val is zero')
-        normval = la.norm(val, ord=2)
+        normval = torch.norm(val, p=2).to(device)
         print('normval', normval.shape)
         sum_error += normval*normval
-
-
     else:
-        for s in tqdm(range(NUMs_SHAPE)):
-        #no need to avg over shapes?
-            print(m_3NxS.shape) #s
-            Ps = m_3NxS[:,s]  # 3Nx1
-            Ps = np.expand_dims(Ps, axis=1)
-            print('Ps.shape', Ps.shape)
-            diff1 = Ps - mu # 3Nx1
-            val = np.dot(U,U.T)@(diff1) - diff1
-            
+        pass
+    # for s in tqdm(range(NUMs_SHAPE)):
+    # #no need to avg over shapes?
 
-            #----------------------
-            # recon = U@S@Vt
-            # print('recon', recon.shape)
-            # val = recon +mu  - Ps  #followed the recon mentioned in toronto notes
-            #----------------------
-            print(val.shape , val)
-            error_mag_for_one_shape = val*val
-            # break
-            # if val.any() >= 0e+00 :  #this should be zero , check
-            #     print('val not zero')
-            # else:
-            #     print('val is zero')
-            # error_mag_for_one_shape = np.dot(val.T,val)  
-            sum_error += error_mag_for_one_shape #sum across all shapes for
+    #     print(m_3NxS.shape) #s
+    #     Ps = m_3NxS[:,s]  # 3Nx1
+    #     Ps = np.expand_dims(Ps, axis=1)
+    #     print('Ps.shape', Ps.shape)
+    #     # diff1 = Ps - mu # 3Nx1
+    #     # val = np.dot(U,U.T)@(diff1) - diff1
+    #     recon = (U@S@Vt).to(device)
+    #     print('recon', recon.shape)
+
+    #     #----------------------
+    #     val = recon +mu  - Ps  #followed the recon mentioned in toronto notes
+    #     #----------------------
+    #     # print(val)
+
+    #     # if val.any() >= 0e+00 :  #this should be zero , check
+    #     #     print('val not zero')
+    #     # else:
+    #     #     print('val is zero')
+    #     error_mag_for_one_shape = np.dot(val.T,val)  
+    #     sum_error += error_mag_for_one_shape
 
 
     # 1xS                         
-     # avg across all swaps, for total shapes
-    # print('sum_error : ', avg_error.shape)
+    avg_error = sum_error #/NUMs_SHAPE
+    print('sum_error : ', avg_error.shape)
     # print('error_mag_for_each_shape:', error_mag_for_each_shape.shape)
-    return sum_error # 1x1
+    return avg_error # 1x1
 
 
 def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
@@ -207,17 +145,18 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
     # or 
     # i should calculate it once and swap as per m_3NxS is swapped 
 
-    mu = np.mean(m_3NxS, axis=1) 
+    mu = torch.mean(m_3NxS, dim=1).to(device) 
     '''assuming the order in m_3NxS is [x1,y1,z1,x2,y2,z2,...,xN,yN,zN].T (colmn '''
     pca_error_alliters_list = []
-    min_sum_pca_error_all_shapes = 1000000 #random large value
+    min_avg_pca_error_across_shapes = 1e7 #random large value
     #TODO the avg_pca_error_across_shapes seems high- 128133 (theirs was around 12k)
 
     optimized_U = None
+    optimized_S = None 
 
     for iter_idx in tqdm(range(iters_I)):
         pca_error_allswaps_list = []  
-        k_pca_errors = 0
+        k_pca_errors = torch.tensor(0.0).to(device)
         # for shape_idx in range(NUMs_SHAPE):
         # i think i should change the order (swap) of points in all shapes at once, 
         # so the order of points is consistent in our matrix, 
@@ -237,8 +176,8 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
                 return 
             #debug
 
-            Psi = m_3NxS[i:i+3][:]  #1 random pt across all shapes (to maintain global consistent order)
-            Psj = m_3NxS[j:j+3][:] #
+            Psi = m_3NxS[i:i+3][:].to(device)  #1 random pt across all shapes (to maintain global consistent order)
+            Psj = m_3NxS[j:j+3][:].to(device) #
             print('m_3NxS[i:i+3] and j', m_3NxS[i:i+3][:].shape, m_3NxS[j:j+3][:].shape)
             # print('Psi,', Psi, '------------------------' ,'Psj:', Psj ,'------------------------\n')
             print('Psi,Psj:', Psi.shape, Psj.shape )
@@ -253,30 +192,30 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
             U,S,Vt = pca_using_svd(m_3NxS)
             # print('U.Ut',np.dot(U,U.T).shape, np.dot(U,U.T ))
             # print('\n-----------------------------------------\n')
+            
 
-            U = U[:,0:BASIS_SIZE] #U is 3Nx3N, U[:,0:BASIS_SIZE] is 3Nx100
+            U = torch.from_numpy(U[:,0:BASIS_SIZE]).to(device) #U is 3Nx3N, U[:,0:BASIS_SIZE] is 3Nx100
             S = np.diag(S)
-            S = S[0:BASIS_SIZE, 0:BASIS_SIZE] #S is 100, S[0:BASIS_SIZE] is 100
-            Vt = Vt[0:BASIS_SIZE, 0:NUMs_SHAPE] #Vt is 3NxS, Vt[0:BASIS_SIZE] is 100xS
-            #very good viz for 4x6 (similar to 3kx5k)  - https://hadrienj.github.io/posts/Deep-Learning-Book-Series-2.8-Singular-Value-Decomposition/
+            S = torch.from_numpy(S[0:BASIS_SIZE, 0:BASIS_SIZE]).to(device) #S is 100, S[0:BASIS_SIZE] is 100
+            Vt = torch.from_numpy(Vt[0:BASIS_SIZE, 0:NUMs_SHAPE]).to(device) #Vt is 3NxS, Vt[0:BASIS_SIZE] is 100xS
+            print('U:', U.get_device(), 'S:', S.get_device(), 'Vt:', Vt.get_device())
 
             print('U:', U.shape, 'S:', S.shape, 'Vt:', Vt.shape)  #U: (m, 100) S: (100,) Vt: (100, 80)
-            print('U.Ut',np.dot(U,U.T).shape, np.dot(U,U.T ))
+            print('U.Ut',(U@U.T).shape, U@U.T )
             
             # break
-            sum_pca_error_all_shapes = pca_reconstruction_error_matrix(U,S,Vt, m_3NxS)
-            print('pca_error:',  sum_pca_error_all_shapes) 
+            avg_pca_error_across_shapes = pca_reconstruction_error(U,S,Vt, m_3NxS)
+            print('pca_error:',  avg_pca_error_across_shapes.shape, avg_pca_error_across_shapes)
 
-            k_pca_errors += sum_pca_error_all_shapes
+            k_pca_errors += avg_pca_error_across_shapes
             
 
-            if sum_pca_error_all_shapes < min_sum_pca_error_all_shapes :
-                min_pca_error = sum_pca_error_all_shapes
+            if avg_pca_error_across_shapes < min_avg_pca_error_across_shapes :
+                min_pca_error = avg_pca_error_across_shapes
                 print(f"{iter_idx}, {swap_idx} pca error reduced")
                 optimized_U = U
-                #save mu as well
+                optimized_S = S
                 #keep changed matrix    
-
             else:
                 #revert back to original
                 m_3NxS[i:i+3][:] = Psi
@@ -286,27 +225,40 @@ def optimizing_pt_ordering(m_3NxS,swaps_K, iters_I):
         avg_iter_error = k_pca_errors/swaps_K
         pca_error_alliters_list.append(avg_iter_error)
 
-        if iter_idx%10 == 0:
-            plot_error_vs_iters(pca_error_periters_list=pca_error_alliters_list,iters_idx=iter_idx)
-        
+        if iter_idx%10 == 1:
+            ploterr = [x.cpu().detach().numpy() for x in pca_error_alliters_list]
+            plot_error_vs_iters(ploterr)
+
+        print(pca_error_alliters_list)
 
     #optimized 
-    return m_3NxS, pca_error_alliters_list, optimized_U
+    return m_3NxS, pca_error_alliters_list, optimized_U, optimized_S
 
 
 def get_optimized_pt_orderingNdraw(m_3NxS,swaps_K, iters_I):
-    m_3NxS, pca_error_periters_list, optimized_U = optimizing_pt_ordering(m_3NxS,swaps_K, iters_I)
+    print('inside get_optimized_pt_orderingNdraw')
+    print('m_3NxS',type(m_3NxS), m_3NxS.shape)
+
+    m_3NxS, pca_error_periters_list, optimized_U,optimized_S = optimizing_pt_ordering(m_3NxS,swaps_K, iters_I)
+    print(type(m_3NxS), type(pca_error_periters_list), type(optimized_U))
+
+    pca_error_periters_list = [x.cpu().detach().numpy() for x in pca_error_periters_list]
+    optimized_U = optimized_U.cpu().detach().numpy()
+    m_3NxS = m_3NxS.cpu().detach().numpy()
+    optimized_S = optimized_S.cpu().detach().numpy()
 
     #draw the optimized point cloud
     # draw(m_3NxS)
     print('Post Optimization point cloud matrix shape: ', m_3NxS.shape)
     print('len of error list: ', len(pca_error_periters_list))
-    plot_error_vs_iters(pca_error_periters_list, ITERS_I)
+    plot_error_vs_iters(pca_error_periters_list)
     draw_point_cloud(m_3NxS[:,0])
-    np.save('point_cloud_matrices/optimized_U.npy', optimized_U)
+    # np.save('point_cloud_matrices/optimized_U.npy', optimized_U)
 
     with open(OPTIMIZED_SORTED_U_FILEPATH, 'wb') as f:
        np.save(OPTIMIZED_SORTED_U_FILEPATH, optimized_U)
+    with open(OPTIMIZED_SIGMA_FILEPATH, 'wb') as f:
+       np.save(OPTIMIZED_SIGMA_FILEPATH, optimized_S)
 
     return m_3NxS
 
@@ -315,6 +267,7 @@ def get_optimized_pt_orderingNdraw(m_3NxS,swaps_K, iters_I):
 if __name__ == '__main__':
 
     optimized_sorted_m_3NxS = None
+
     
 
     with open(SORTED_POINTCLOUD_NPY_FILEPATH, 'rb') as f:
@@ -325,7 +278,8 @@ if __name__ == '__main__':
         #viz some pt clouds and color the pts, to confirm the pts loaded correctly
         draw_point_cloud(m_3NxS_sorted[:,0]) #works
 
-        m_3NxS_sorted = m_3NxS_sorted[:3*WIDTH, 0:NUMs_SHAPE] #for testing
+        m_3NxS_sorted = torch.tensor(m_3NxS_sorted).to(device)
+        m_3NxS_sorted = m_3NxS_sorted[:3*WIDTH, 0:NUMs_SHAPE].to(device) #for testing
         print('m_3NxS_sorted',m_3NxS_sorted.shape)
 
         start = time.time()

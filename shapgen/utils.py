@@ -6,7 +6,7 @@ Plotting and drawing functions
 import matplotlib.pyplot as plt
 import open3d as o3d
 
-from configs import BASIS_SIZE, WIDTH, NUMs_SHAPE  
+from configs import BASIS_SIZE, WIDTH, NUMs_SHAPE , ITERS_I, SWAP_K
 
 def draw_point_cloud(ptcloud_matrix_3Nx1_old):
     print('point cloud old matrix shape:', ptcloud_matrix_3Nx1_old.shape)
@@ -27,7 +27,7 @@ def draw_point_cloud(ptcloud_matrix_3Nx1_old):
     #draw the point cloud
     return 
 
-def plot_error_vs_iters(pca_error_periters_list):
+def plot_error_vs_iters(pca_error_periters_list,iters_idx):
     #plot the error vs iterations
     
     plt.plot(pca_error_periters_list)
@@ -35,7 +35,7 @@ def plot_error_vs_iters(pca_error_periters_list):
     plt.ylabel('Error')
     plt.title('Error vs Iterations')
     
-    savepath = f'plots/pca_error_vs_iters_{BASIS_SIZE}_{WIDTH}_{NUMs_SHAPE}.png'
+    savepath = f'plots/pca_error_vs_iters_{iters_idx}_{SWAP_K}_{BASIS_SIZE}_{WIDTH}_{NUMs_SHAPE}.png'
     plt.savefig(savepath)
     plt.show()
 

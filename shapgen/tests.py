@@ -129,8 +129,10 @@ def norms():
 
     a = torch.tensor([[1,2,3,4,5], [1,2,3,4,5]], dtype=torch.float32)
     b = torch.tensor([[0,0,0,0,0], [1,1,1,1,1]] , dtype=torch.float32)
+    
 
-    c = torch.norm(a-b, p=2)
+    val = torch.norm(a, p=2)
+    c = val*val
     print(c)
 
 def pca_recon():
@@ -140,6 +142,28 @@ def pca_recon():
     print(np.mean(a, axis=1))
     b = torch.tensor([[0,0,0,0,0], [1,1,1,1,1]] , dtype=np.float32)
 
+def brdctg():
+    a = np.array([[1,2,3,4,5],[6,7,8,9,10],[11,12,13,14,15]]).T
+    mu = np.expand_dims(np.mean(a, axis=1), 1)
+    b = np.ones((5,1))
+    print(b.shape)
+    print(a+b)
+
+def torchexp():
+    a = torch.tensor([1,2,3,4,5]).T
+    b = torch.tensor([[6,7,8,9,10],[11,12,13,14,15],[16,17,18,19,20]]).T
+    print(a.shape)
+    # a = a.expand(b.size())
+    a = a.unsqueeze(1)
+    a = a.repeat(1,5)
+    print(a,a.shape)
+
+def numpyrepeats():
+    a = np.array([1,2,1,4,5]).T
+    a = np.expand_dims(a,1)
+    a = np.repeat(a, 3, axis=1)
+    print(a)
+    print((a.sum(axis=0)).sum(axis=0))
 
 if __name__ == '__main__':
     # normtests()
@@ -150,4 +174,7 @@ if __name__ == '__main__':
     # cat()
     # batched_cov_test()
     # norms()
-    pca_recon()
+    # pca_recon()
+    # brdctg()
+    # torchexp()
+    numpyrepeats()
